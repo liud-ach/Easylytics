@@ -1,0 +1,5 @@
+flask==3.0.0
+pandas==2.1.4
+pyinstaller==6.3.0
+pyarrow==14.0.1
+fastparquet==2023.10.1
