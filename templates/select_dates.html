@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Selection - Step 2</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --border-radius: 0.25rem;
+            --box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        }
+        body { 
+            font-family: var(--font-family);
+            margin: 0;
+            display: flex; 
+            min-height: 100vh; 
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            align-items: center; /* Center content vertically */
+            justify-content: center; /* Center content horizontally */
+        }
+        .container {
+            width: 100%;
+            max-width: 900px; /* Adjusted width */
+            margin: 20px;
+            padding: 25px;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-top: 50px;
+        }
+        .header h1 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.8em;
+        }
+        .selected-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--light-gray);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--medium-gray);
+            font-size: 0.9em;
+        }
+        .selected-info p {
+            margin: 5px 0;
+        }
+        .selected-info strong {
+            color: var(--dark-gray);
+        }
+        .selected-info ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-top: 5px;
+        }
+        .selected-info ul li {
+            background-color: var(--medium-gray);
+            padding: 5px 8px;
+            border-radius: var(--border-radius);
+            margin-bottom: 3px;
+            font-size: 0.95em;
+        }
+        .selected-periods-summary {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9em;
+        }
+        .selected-periods-summary h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1em;
+            color: var(--dark-gray);
+        }
+        .selected-periods-list {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .selected-period-item {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+        }
+        .selected-period-item .remove-btn {
+            background: none;
+            border: none;
+            color: white;
+            margin-left: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            padding: 0;
+        }
+        .error-message {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        .date-selection-form h2 {
+            font-size: 1.3em;
+            color: var(--dark-gray);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .date-range-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: #fff;
+        }
+        .reporting-period-list {
+            list-style-type: none;
+            padding: 0;
+            max-height: 200px; /* Adjust as needed */
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            background-color: var(--light-gray);
+            margin-bottom: 15px;
+        }
+        .reporting-period-list li {
+            padding: 8px 5px;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        .reporting-period-list li:last-child {
+            border-bottom: none;
+        }
+        .reporting-period-list label {
+            font-weight: normal; /* Override general label boldness if any */
+            display: flex;
+            align-items: center;
+        }
+        .reporting-period-list input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .action-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .action-area .back-link {
+            background-color: var(--secondary-color);
+            color: white;
+            border: 1px solid var(--secondary-color);
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .action-area .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .action-area .back-link:hover {
+            background-color: #545b62;
+            border-color: #545b62;
+        }
+        .action-area .submit-button:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .action-area button:disabled {
+            background-color: var(--medium-gray);
+            border-color: var(--medium-gray);
+            cursor: not-allowed;
+        }
+        .available-periods {
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+        .available-periods h3 {
+            font-size: 1.1em;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+        .available-periods ul {
+            list-style-type: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            background-color: var(--light-gray);
+        }
+        .available-periods li {
+            padding: 5px 0;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        .available-periods li:last-child {
+            border-bottom: none;
+        }
+        /* Minimalistic scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--light-gray); }
+        ::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Select Analysis Periods</h1>
+        </div>
+
+        <div class="selected-info">
+            <p><strong>Selected Clinicians:</strong></p>
+            {% if selected_names %}
+                <ul>
+                    {% for name in selected_names %}
+                        <li>{{ name }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No clinicians selected.</p> 
+            {% endif %}
+        </div>
+
+        <form class="date-selection-form" method="post" action="{{ url_for('analyze_metrics') }}" id="analysisForm">
+            <input type="hidden" name="selected_users_json" value="{{ selected_names|tojson|safe }}">
+            
+            <h2>Select Pre-Intervention Reporting Periods</h2>
+            <div id="prePeriodsError" class="error-message" style="display: none;"></div>
+            <div class="date-range-group">
+                <ul class="reporting-period-list">
+                    {% if all_reporting_periods %}
+                        {% for period in all_reporting_periods %}
+                        <li>
+                            <label>
+                                <input type="checkbox" name="pre_selected_periods" value="{{ period.start_date }} to {{ period.end_date }}" id="pre_period_{{ loop.index0 }}" onchange="handlePeriodSelection('pre', this)">
+                                {{ period.start_date }} to {{ period.end_date }}
+                            </label>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No reporting periods available. Please check data sources or configurations.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="selected-periods-summary" id="selectedPrePeriodsContainer" style="display: none;">
+                <h4>Selected Pre-Intervention Periods:</h4>
+                <div id="selectedPrePeriodsDisplay" class="selected-periods-list"></div>
+            </div>
+
+            <h2>Select Post-Intervention Reporting Periods</h2>
+            <div id="postPeriodsError" class="error-message" style="display: none;"></div>
+            <div class="date-range-group">
+                <ul class="reporting-period-list">
+                     {% if all_reporting_periods %}
+                        {% for period in all_reporting_periods %}
+                        <li>
+                            <label>
+                                <input type="checkbox" name="post_selected_periods" value="{{ period.start_date }} to {{ period.end_date }}" id="post_period_{{ loop.index0 }}" onchange="handlePeriodSelection('post', this)">
+                                {{ period.start_date }} to {{ period.end_date }}
+                            </label>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No reporting periods available. Please check data sources or configurations.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="selected-periods-summary" id="selectedPostPeriodsContainer" style="display: none;">
+                <h4>Selected Post-Intervention Periods:</h4>
+                <div id="selectedPostPeriodsDisplay" class="selected-periods-list"></div>
+            </div>
+            
+            <div class="action-area">
+                <a href="{{ url_for('index', **back_link_params) }}" class="back-link">&larr; Back to Clinician Selection</a>
+                <button type="submit" class="submit-button" id="analyzeButton">Analyze Metrics</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const allPeriodsData = JSON.parse('{{ all_reporting_periods|tojson|safe }}');
+
+        function handlePeriodSelection(type, checkboxElement) {
+            updateSelectedPeriodsDisplay(type);
+            validateSelections();
+        }
+
+        function updateSelectedPeriodsDisplay(type) {
+            const displayContainerId = type === 'pre' ? 'selectedPrePeriodsDisplay' : 'selectedPostPeriodsDisplay';
+            const summaryContainerId = type === 'pre' ? 'selectedPrePeriodsContainer' : 'selectedPostPeriodsContainer';
+            const checkboxName = type === 'pre' ? 'pre_selected_periods' : 'post_selected_periods';
+
+            const displayContainer = document.getElementById(displayContainerId);
+            const summaryContainer = document.getElementById(summaryContainerId);
+            displayContainer.innerHTML = ''; // Clear previous items
+
+            const checkedCheckboxes = document.querySelectorAll(`input[name="${checkboxName}"]:checked`);
+
+            if (checkedCheckboxes.length > 0) {
+                summaryContainer.style.display = 'block';
+                checkedCheckboxes.forEach(checkbox => {
+                    const periodValue = checkbox.value;
+                    const periodId = checkbox.id;
+
+                    const itemElement = document.createElement('span');
+                    itemElement.className = 'selected-period-item';
+                    itemElement.textContent = periodValue;
+
+                    const removeButton = document.createElement('button');
+                    removeButton.className = 'remove-btn';
+                    removeButton.innerHTML = '&times;';
+                    removeButton.type = 'button';
+                    removeButton.onclick = function() {
+                        const originalCheckbox = document.getElementById(periodId);
+                        if (originalCheckbox) {
+                            originalCheckbox.checked = false;
+                        }
+                        updateSelectedPeriodsDisplay(type);
+                        validateSelections();
+                    };
+
+                    itemElement.appendChild(removeButton);
+                    displayContainer.appendChild(itemElement);
+                });
+            } else {
+                summaryContainer.style.display = 'none';
+            }
+        }
+
+        function checkSequential(groupName, errorDisplayId) {
+            const errorDiv = document.getElementById(errorDisplayId);
+            const checkboxes = Array.from(document.querySelectorAll(`input[name="${groupName}"]`));
+            const checkedIndices = [];
+            checkboxes.forEach((cb, index) => {
+                if (cb.checked) {
+                    checkedIndices.push(index);
+                }
+            });
+
+            if (checkedIndices.length <= 1) {
+                errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
+                return true;
+            }
+
+            for (let i = 0; i < checkedIndices.length - 1; i++) {
+                if (checkedIndices[i+1] !== checkedIndices[i] + 1) {
+                    errorDiv.textContent = 'Selected periods must be sequential (no gaps).';
+                    errorDiv.style.display = 'block';
+                    return false;
+                }
+            }
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+            return true;
+        }
+
+        function validateSelections() {
+            const preSelectedCount = document.querySelectorAll('input[name="pre_selected_periods"]:checked').length;
+            const postSelectedCount = document.querySelectorAll('input[name="post_selected_periods"]:checked').length;
+            
+            const preSequential = checkSequential('pre_selected_periods', 'prePeriodsError');
+            const postSequential = checkSequential('post_selected_periods', 'postPeriodsError');
+
+            const analyzeButton = document.getElementById('analyzeButton');
+            let alertMessage = '';
+
+            if (preSelectedCount === 0) {
+                alertMessage += 'Please select at least one pre-intervention reporting period.\n';
+            }
+            if (!preSequential && preSelectedCount > 1) {
+                 alertMessage += 'Pre-intervention periods must be sequential.\n';
+            }
+
+            if (postSelectedCount === 0) {
+                alertMessage += 'Please select at least one post-intervention reporting period.\n';
+            }
+            if (!postSequential && postSelectedCount > 1) {
+                alertMessage += 'Post-intervention periods must be sequential.\n';
+            }
+
+            if (preSelectedCount > 0 && postSelectedCount > 0 && preSequential && postSequential) {
+                analyzeButton.disabled = false;
+            } else {
+                analyzeButton.disabled = true;
+            }
+        }
+
+        document.getElementById('analysisForm').onsubmit = function() {
+            const preSelectedCount = document.querySelectorAll('input[name="pre_selected_periods"]:checked').length;
+            const postSelectedCount = document.querySelectorAll('input[name="post_selected_periods"]:checked').length;
+            const preSequential = checkSequential('pre_selected_periods', 'prePeriodsError');
+            const postSequential = checkSequential('post_selected_periods', 'postPeriodsError');
+
+            let messages = [];
+            if (preSelectedCount === 0) {
+                messages.push('Please select at least one pre-intervention reporting period.');
+            }
+            if (!preSequential && preSelectedCount > 1) {
+                messages.push('Pre-intervention periods must be sequential (no gaps).');
+            }
+            if (postSelectedCount === 0) {
+                messages.push('Please select at least one post-intervention reporting period.');
+            }
+            if (!postSequential && postSelectedCount > 1) {
+                messages.push('Post-intervention periods must be sequential (no gaps).');
+            }
+
+            if (messages.length > 0) {
+                alert(messages.join('\n'));
+                return false;
+            }
+            return true;
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedPeriodsDisplay('pre');
+            updateSelectedPeriodsDisplay('post');
+            validateSelections();
+        });
+    </script>
+</body>
+</html>

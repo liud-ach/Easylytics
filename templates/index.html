@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinician Selection - Step 1</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --border-radius: 0.25rem;
+            --box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        }
+        body { 
+            font-family: var(--font-family);
+            margin: 0;
+            display: flex; 
+            min-height: 100vh; 
+            background-color: var(--light-gray);
+            color: var(--text-color);
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px; /* Wider for this page */
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+        }
+        .header h1 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.8em;
+            text-align: center;
+        }
+        .filters-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+        }
+        .filters-container h2 {
+            margin-top: 0;
+            color: var(--dark-gray);
+            font-size: 1.3em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        .filter-group input[type="text"],
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        .filter-group select[multiple] {
+            height: auto; /* Adjust height for multiple select */
+            min-height: 100px; /* Provide a decent default size */
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .filter-buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+        .filter-buttons .apply-filter {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .filter-buttons .apply-filter:hover {
+            background-color: #0056b3;
+        }
+        .filter-buttons .clear-filter {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .filter-buttons .clear-filter:hover {
+            background-color: #545b62;
+        }
+
+        .selected-clinicians-summary {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+        }
+        .selected-clinicians-summary h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: var(--dark-gray);
+        }
+        .clear-all-btn {
+            padding: 4px 10px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background-color 0.2s ease;
+        }
+        .clear-all-btn:hover {
+            background-color: #dc3545;
+        }
+        .selected-clinicians-list {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .selected-clinician-item {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+        }
+        .selected-clinician-item .remove-btn {
+            background: none;
+            border: none;
+            color: white;
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 0;
+        }
+
+        .users-list-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            flex-grow: 1; /* Allows this section to take available space */
+            display: flex;
+            flex-direction: column;
+        }
+        .users-list-container h2 {
+            margin-top: 0;
+            color: var(--dark-gray);
+            font-size: 1.3em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .user-selection-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px; /* Add some space before the grid */
+        }
+        .user-selection-buttons button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .user-selection-buttons button:hover {
+            background-color: #545b62;
+        }
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Adjust for more info */
+            gap: 15px;
+            overflow-y: auto; /* Scroll within this section if content overflows */
+            max-height: 500px; /* Or a suitable height */
+            padding-right: 10px; /* For scrollbar */
+        }
+        .user-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            background-color: var(--light-gray);
+            font-size: 0.9em;
+        }
+        .user-card input[type="checkbox"] {
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .user-card label {
+            font-weight: 500;
+            vertical-align: middle;
+        }
+        .user-card .details {
+            font-size: 0.85em;
+            color: var(--secondary-color);
+            margin-top: 5px;
+            padding-left: 25px; /* Align with checkbox */
+        }
+        .action-area {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: right;
+        }
+        .action-area button {
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        .action-area button:hover {
+            background-color: #0056b3;
+        }
+        .action-area button:disabled {
+            background-color: var(--medium-gray);
+            cursor: not-allowed;
+        }
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        /* Minimalistic scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--light-gray); }
+        ::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Clinician Selection for Analysis</h1>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% if request.args.get('error') == 'no_users_selected' %}
+            <div class="flash-message flash-error">Please select at least one clinician.</div>
+        {% endif %}
+
+        <form method="get" action="{{ url_for('index') }}" id="filterForm">
+            <div class="filters-container">
+                <h2>Filter Clinicians</h2>
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="name_query">Name:</label>
+                        <input type="text" id="name_query" name="name_query" value="{{ request.args.get('name_query', '') }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="specialty">Specialty:</label>
+                        <select id="specialty" name="specialty" multiple>
+                            <option value="">All Specialties</option>
+                            {% for specialty in specialties %}
+                                <option value="{{ specialty }}" {% if specialty in request.args.getlist('specialty') %}selected{% endif %}>{{ specialty }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="department">Department:</label>
+                        <select id="department" name="department">
+                            <option value="">All Departments</option>
+                            {% for d in departments %}
+                            <option value="{{ d|lower }}" {% if request.args.get('department', '') == d|lower %}selected{% endif %}>{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="user_type">User Type:</label>
+                        <select id="user_type" name="user_type">
+                            <option value="">All User Types</option>
+                            {% for ut in user_types %}
+                            <option value="{{ ut|lower }}" {% if request.args.get('user_type', '') == ut|lower %}selected{% endif %}>{{ ut }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                 <!-- Hidden fields to persist selected users during filtering -->
+                {% for selected_name in persisted_selected_names %}
+                    <input type="hidden" name="selected_users" value="{{ selected_name }}">
+                {% endfor %}
+                <div class="filter-buttons">
+                    <button type="submit" class="apply-filter">Apply Filters</button>
+                    <button type="button" class="clear-filter" onclick="clearFilters()">Clear Filters</button>
+                </div>
+            </div>
+        </form>
+        
+        <form method="post" action="{{ url_for('select_dates_page') }}" id="userSelectionForm">
+            <div class="users-list-container">
+                <h2>Select Clinicians ({{ users|length }} matching)</h2>
+                
+                <div class="selected-clinicians-summary" id="selectedCliniciansContainer" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="margin: 0;">Currently Selected Clinicians:</h3>
+                        <button type="button" onclick="clearAllSelections()" class="clear-all-btn">Clear All</button>
+                    </div>
+                    <div id="selectedCliniciansDisplay" class="selected-clinicians-list">
+                        <!-- Selected clinicians will be populated here by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="user-selection-buttons">
+                    <button type="button" onclick="selectAllClinicians(true)">Select All Visible Clinicians</button>
+                    <button type="button" onclick="selectAllClinicians(false)">Deselect All Visible Clinicians</button>
+                </div>
+                <div class="users-grid" id="usersGrid">
+                    {% for user in users %}
+                    <div class="user-card">
+                        <input type="checkbox" name="selected_users" value="{{ user.name }}" id="{{ user.id }}" 
+                               {% if user.name in persisted_selected_names %}checked{% endif %} onchange="updateSelectedCount()">
+                        <label for="{{ user.id }}">{{ user.name }}</label>
+                        <div class="details">
+                            {{ user.specialty }} <br>
+                            {{ user.department }} <br>
+                            Type: {{ user.user_type }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p>No users found matching your criteria.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="action-area">
+                <button type="submit" id="proceedButton" disabled>Proceed to Date Selection (<span id="selectedCount">0</span>)</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function clearFilters() {
+            // Clear all filter inputs
+            document.getElementById('name_query').value = '';
+            document.getElementById('specialty').value = '';
+            const specialtySelect = document.getElementById('specialty');
+            Array.from(specialtySelect.options).forEach(option => option.selected = false);
+            document.getElementById('department').value = '';
+            document.getElementById('user_type').value = '';
+
+            // Get currently selected users from the grid
+            const checkedUsers = document.querySelectorAll('#usersGrid input[name="selected_users"]:checked');
+            
+            // Clear existing hidden inputs
+            const filterForm = document.getElementById('filterForm');
+            const hiddenSelected = filterForm.querySelectorAll('input[name="selected_users"]');
+            hiddenSelected.forEach(input => input.remove());
+            
+            // Add new hidden inputs for selected users
+            checkedUsers.forEach(checkbox => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'selected_users';
+                hiddenInput.value = checkbox.value;
+                filterForm.appendChild(hiddenInput);
+            });
+
+            filterForm.submit();
+        }
+
+        function updateSelectedCliniciansDisplay(checkedCheckboxes) {
+            const displayContainer = document.getElementById('selectedCliniciansDisplay');
+            const summaryContainer = document.getElementById('selectedCliniciansContainer');
+            displayContainer.innerHTML = ''; // Clear previous items
+
+            if (checkedCheckboxes && checkedCheckboxes.length > 0) {
+                summaryContainer.style.display = 'block';
+                checkedCheckboxes.forEach(checkbox => {
+                    const itemName = checkbox.value; 
+                    const itemId = checkbox.id;
+
+                    const itemElement = document.createElement('span');
+                    itemElement.className = 'selected-clinician-item';
+                    itemElement.textContent = itemName;
+
+                    const removeButton = document.createElement('button');
+                    removeButton.className = 'remove-btn';
+                    removeButton.innerHTML = '&times;'; 
+                    removeButton.type = 'button'; 
+                    removeButton.onclick = function() {
+                        const originalCheckbox = document.getElementById(itemId);
+                        if (originalCheckbox) {
+                            originalCheckbox.checked = false;
+                        }
+                        updateSelectedCount(); 
+                    };
+
+                    itemElement.appendChild(removeButton);
+                    displayContainer.appendChild(itemElement);
+                });
+            } else {
+                summaryContainer.style.display = 'none';
+            }
+        }
+
+        function updateSelectedCount() {
+            const checkedCheckboxes = document.querySelectorAll('#userSelectionForm input[name="selected_users"]:checked');
+            const count = checkedCheckboxes.length;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('proceedButton').disabled = count === 0;
+            updateSelectedCliniciansDisplay(checkedCheckboxes);
+        }
+        
+        function clearAllSelections() {
+            // Uncheck all checkboxes in the grid
+            const checkboxes = document.querySelectorAll('#usersGrid input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Clear hidden inputs in the filter form
+            const filterForm = document.getElementById('filterForm');
+            const hiddenSelected = filterForm.querySelectorAll('input[name="selected_users"]');
+            hiddenSelected.forEach(input => input.remove());
+            
+            // Update the display
+            updateSelectedCount();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectedCount(); // Initial count on page load
+        });
+
+        function selectAllClinicians(select) {
+            const checkboxes = document.querySelectorAll('#usersGrid input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = select;
+            });
+            updateSelectedCount(); // Ensure count and display are updated
+        }
+
+        document.getElementById('specialty').addEventListener('change', updateClinicians);
+
+        async function updateClinicians() {
+            const selectedSpecialties = Array.from(document.getElementById('specialty').selectedOptions).map(option => option.value);
+        }
+
+        document.getElementById('filterForm').addEventListener('submit', function(event) {
+            const selectedSpecialties = Array.from(document.getElementById('specialty').selectedOptions).map(option => option.value);
+        });
+    </script>
+</body>
+</html>

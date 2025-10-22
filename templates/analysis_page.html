@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Step 3</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --dark-gray: #343a40;
+            --border-color: #dee2e6;
+            --text-color: #212529;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --border-radius: 0.25rem;
+            --box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            --table-hover-bg: #f1f3f5;
+        }
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            background-color: var(--light-gray);
+            color: var(--text-color);
+            display: flex; /* Use flexbox for layout */
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 280px; /* Increased width */
+            background-color: #fff;
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+            height: 100vh; /* Full height */
+            position: fixed; /* Fixed position */
+            top: 0;
+            left: 0;
+            overflow-y: auto; /* Scrollable if content overflows */
+        }
+        .sidebar h2 {
+            font-size: 1.4em;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .sidebar .filter-group {
+            margin-bottom: 20px;
+        }
+        .sidebar .filter-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .sidebar .filter-group select, .sidebar .filter-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        .sidebar .metric-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+            max-height: 300px; /* Limit height and make scrollable */
+            overflow-y: auto;
+        }
+        .sidebar .metric-list li {
+            margin-bottom: 2px;
+            padding-left: 20px; /* Indent metrics under category */
+        }
+        .sidebar .metric-list label {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .sidebar .metric-list label:hover {
+            background-color: var(--medium-gray);
+        }
+        .sidebar .metric-list input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        .sidebar .metric-category {
+            margin-bottom: 15px;
+        }
+        .sidebar .metric-category h3 {
+            font-size: 1.1em;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+        .sidebar .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sidebar .action-button {
+            padding: 8px;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .sidebar .action-button:hover {
+            background-color: #0056b3;
+        }
+        .main-content {
+            margin-left: 300px; /* Account for sidebar width + some margin */
+            padding: 25px;
+            width: calc(100% - 300px); /* Adjust width */
+            box-sizing: border-box;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.8em;
+        }
+        .summary-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            font-size: 0.9em;
+        }
+        .summary-info p { margin: 5px 0; }
+        .summary-info strong { color: var(--dark-gray); }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: var(--box-shadow);
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            overflow: hidden; /* For border-radius on table */
+        }
+        .results-table th, .results-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px 15px; /* Increased padding */
+            text-align: left;
+            font-size: 0.9em;
+        }
+        .results-table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            position: sticky; /* Sticky header */
+            top: 0; /* Stick to the top of the viewport within its scroll container */
+            z-index: 10;
+        }
+        .results-table tbody tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        .results-table tbody tr:hover {
+            background-color: var(--table-hover-bg);
+        }
+        .results-table td.metric-name { font-weight: 500; }
+        .results-table td.metric-type { font-style: italic; color: var(--secondary-color); }
+        .results-table td.numeric { text-align: right; }
+        .results-table td.positive-change { color: #28a745; } /* Green for positive */
+        .results-table td.negative-change { color: #dc3545; } /* Red for negative */
+
+        .action-area {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-start; /* Align to start */
+            align-items: center;
+            position: absolute;
+            top: 25px;
+            left: 315px;
+            border-top: none;
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        .action-area .back-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: 1px solid var(--secondary-color);
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            text-align: center;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        
+        .action-area .back-button:hover {
+            background-color: #545b62;
+            border-color: #545b62;
+        }
+
+        /* Minimalistic scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--light-gray); }
+        ::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* New styles for significant results */
+        .significant-row {
+            font-weight: bold;
+        }
+
+        .filter-controls {
+            margin: 15px 0;
+            text-align: right;
+        }
+
+        .filter-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .filter-button:hover {
+            background-color: #0056b3;
+        }
+
+        .filter-button.active {
+            background-color: #28a745;
+        }
+        
+        /* Selection counter */
+        .metric-selection-count {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 6px;
+            border-radius: 50%;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        /* Selected metric summary */
+        .selected-metrics-summary {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--light-gray);
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .selected-metrics-summary p {
+            margin: 0 0 5px 0;
+            font-weight: 500;
+        }
+        .selected-metrics-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .selected-metric-tag {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: var(--border-radius);
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+        }
+        .remove-metric {
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Category checkbox styles */
+        .category-checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .category-checkbox {
+            margin-right: 8px;
+        }
+        
+        .category-header {
+            margin-bottom: 8px;
+        }
+
+        .category-header h3 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .category-label {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s;
+        }
+
+        .category-label:hover {
+            background-color: var(--medium-gray);
+        }
+
+        .category-filter-checkbox {
+            margin-right: 8px;
+        }
+        
+        .category-counter {
+            font-size: 0.8em;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            margin-left: 8px;
+        }
+        .sidebar .filter-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .selected-only-btn {
+            padding: 8px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .selected-only-btn.active {
+            background-color: #0056b3;
+        }
+        .selected-only-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .show-selected-btn {
+            padding: 8px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        .show-selected-btn.active {
+            background-color: #0056b3;
+        }
+        
+        .show-selected-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .selected-metrics-summary {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: var(--light-gray);
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .metric-selection-info {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .metric-selection-count {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+        
+        .selected-metrics-summary {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: var(--light-gray);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+        
+        .selected-metrics-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .selected-metric-tag {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .remove-metric {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        .remove-metric:hover {
+            opacity: 1;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .metric-type-filters {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .filter-checkbox input[type="checkbox"] {
+            cursor: pointer;
+        }
+        
+        #showSelectedBtn {
+            white-space: nowrap;
+            padding: 8px 12px;
+        }
+        
+        #showSelectedBtn.active {
+            background-color: #0056b3;
+        }
+        
+        .category-checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            padding: 4px 8px;
+            border-radius: var(--border-radius);
+            transition: background-color 0.2s;
+        }
+        
+        .category-checkbox-container:hover {
+            background-color: var(--medium-gray);
+        }
+        
+        .category-counter {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
+        .export-button {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 100;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--box-shadow);
+            transition: background-color 0.2s;
+        }
+        
+        .export-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .export-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sortable::after {
+            content: '↕';
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .sortable.asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        .sortable.desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        /* Make table header text white */
+        .results-table thead th {
+            color: white;
+        }
+
+        /* Sortable column styles */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 15px;
+        }
+
+        .sortable::after {
+            content: '↕';
+            position: absolute;
+            right: 0;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .sortable.asc::after {
+            content: '↑';
+            color: white;
+        }
+
+        .sortable.desc::after {
+            content: '↓';
+            color: white;
+        }
+
+        /* Rest of your existing styles */
+    </style>
+</head>
+<body>
+        <input type="hidden" id="persisted-metrics-data" 
+               value='{{ persisted_selected_metrics|tojson|safe if persisted_selected_metrics else "[]" }}'>
+    <div class="sidebar">
+        <h2>Filter Results</h2>
+        <div class="filter-group">
+            <label for="metricSearch">Search Metrics:</label>
+            <input type="text" id="metricSearch" onkeyup="filterBySearch()" placeholder="Search metrics...">
+            
+            <label for="categoryFilter">Filter by Category:</label>
+            <select id="categoryFilter" onchange="filterByCategory()">
+                <option value="">All Categories</option>
+                {% for category in metric_categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Filter by Type:</label>
+            <div class="metric-type-filters">
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filterIP" checked onchange="updateMetricTypeFilters()">
+                    IP
+                </label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filterAMB" checked onchange="updateMetricTypeFilters()">
+                    AMB
+                </label>
+            </div>
+        </div>
+
+        <div id="metricsContainer">
+            {% for category, metrics_in_category in sidebar_metrics.items() %}
+            <div class="metric-category" data-category="{{ category }}">
+                <div class="category-header">
+                    <h3>
+                        <label class="category-label">
+                            <input type="checkbox" 
+                                   class="category-filter-checkbox"
+                                   value="{{ category }}"
+                                   checked
+                                   onchange="toggleCategoryMetrics(this)">
+                            {{ category }} <span class="category-counter">{{ metrics_in_category|length }}</span>
+                        </label>
+                    </h3>
+                </div>
+                <ul class="metric-list">
+                    {% for metric in metrics_in_category %}
+                    <li>
+                        <label>
+                            <input type="checkbox" 
+                                   class="sidebar-filter-checkbox" 
+                                   value="{{ metric.name }}" 
+                                   onchange="updateTableFilters()"
+                                   checked> <!-- Start with all filters checked -->
+                            {{ metric.name }} ({{ metric.type }})
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="persisted-metrics-data" style="display: none;">{{ persisted_selected_metrics|default({})|tojson|safe }}</div>
+        <!-- original line <div id="persisted-metrics-data" style="display: none;">{{ persisted_selected_metrics|tojson|safe }}</div> -->
+        <button onclick="exportSelectedMetrics()" class="export-button">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            Export Selected
+        </button>
+        <div class="header">
+            <h1>Analysis Results</h1>
+        </div>
+        
+        <div class="action-area">
+            <a href="{{ url_for('select_dates_page') }}" class="back-button">&larr; Back to Date Selection</a>
+        </div>
+
+        <div class="summary-info">
+            <p><strong>Selected Clinicians:</strong> {{ selected_clinicians|join(', ') }}</p>
+            <p><strong>Pre-Intervention Period:</strong> {{ pre_start }} to {{ pre_end }}</p>
+            <p><strong>Post-Intervention Period:</strong> {{ post_start }} to {{ post_end }}</p>
+        </div>
+        
+        <div class="filter-controls">
+            <button id="showSignificantButton" class="filter-button">Show Significant Results (>5% Change)</button>
+            <button id="showAllButton" class="filter-button active">Show All Results</button>
+        </div>
+
+        <table class="results-table" id="resultsTable">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="selectAllMetrics" onclick="toggleAllMetrics(this)">
+                            <span class="sortable" onclick="sortTable(0, 'text')">Metric Name</span>
+                        </div>
+                    </th>
+                    <th><span class="sortable" onclick="sortTable(1, 'text')">Type</span></th>
+                    <th><span class="sortable" onclick="sortTable(2, 'text')">Category</span></th>
+                    <th><span class="sortable" onclick="sortTable(3, 'numeric')">Pre-Median</span></th>
+                    <th><span class="sortable" onclick="sortTable(4, 'numeric')">Post-Median</span></th>
+                    <th><span class="sortable" onclick="sortTable(5, 'numeric')">Abs. Diff.</span></th>
+                    <th><span class="sortable" onclick="sortTable(6, 'numeric')">% Change</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr id="metric-{{ result.name|replace(' ', '-') }}-{{ result.type }}" 
+                    data-category="{{ result.category }}" 
+                    data-name="{{ result.name }}"
+                    data-metric="{{ result.name }}"
+                    data-type="{{ result.type }}"
+                    data-pct-change="{{ result.pct_diff }}"
+                    class="{% if result.pct_diff != 'N/A' and (result.pct_diff.startswith('-') and result.pct_diff.replace('-', '').replace('%', '') | float >= 5.0 or not result.pct_diff.startswith('-') and result.pct_diff.replace('%', '') | float >= 5.0) %}significant-row{% endif %}">
+                    <td class="metric-name">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" 
+                                   class="metric-checkbox" 
+                                   value="{{ result.name }}" 
+                                   onchange="updateMetricSelection(this)"
+                                   {% if result.name in persisted_selected_metrics %}checked{% endif %}>
+                            <span>{{ result.name }}</span>
+                        </div>
+                    </td>
+                    <td class="metric-type">{{ result.type }}</td>
+                    <td>{{ result.category }}</td>
+                    <td class="numeric">{{ result.pre_median }}</td>
+                    <td class="numeric">{{ result.post_median }}</td>
+                    <td class="numeric {{ 'positive-change' if result.abs_diff != 'N/A' and result.abs_diff|float > 0 else ('negative-change' if result.abs_diff != 'N/A' and result.abs_diff|float < 0 else '') }}">
+                        {{ result.abs_diff }}
+                    </td>
+                    <td class="numeric {{ 'positive-change' if result.pct_diff != 'N/A' and not result.pct_diff.startswith('-') and result.pct_diff != '0.00%' else ('negative-change' if result.pct_diff != 'N/A' and result.pct_diff.startswith('-') else '') }}">
+                        {{ result.pct_diff }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Initialize selectedMetrics Set
+        const selectedMetrics = new Set(JSON.parse('{{ persisted_selected_metrics|tojson|safe if persisted_selected_metrics else "[]" }}'));
+
+        // Toggle all metrics selection
+        function toggleAllMetrics(checkbox) {
+            // Only toggle visible metrics
+            const visibleMetricCheckboxes = document.querySelectorAll('.metric-checkbox:not([disabled]):not([style*="display: none"])');
+            visibleMetricCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+                if (checkbox.checked) {
+                    selectedMetrics.add(cb.value);
+                } else {
+                    selectedMetrics.delete(cb.value);
+                }
+                
+                // Update corresponding filter checkbox in sidebar
+                const sidebarCheckbox = document.querySelector(`.sidebar-filter-checkbox[value="${cb.value}"]`);
+                if (sidebarCheckbox) {
+                    sidebarCheckbox.checked = true; // Keep filters checked, only update selection
+                }
+            });
+            saveSelectedMetrics();
+            updateExportButton();
+        }
+
+        // Update individual metric selection
+        function updateMetricSelection(checkbox) {
+            if (checkbox.checked) {
+                selectedMetrics.add(checkbox.value);
+            } else {
+                selectedMetrics.delete(checkbox.value);
+            }
+            
+            // Update "Select All" checkbox state
+            const allMetricCheckboxes = document.querySelectorAll('.metric-checkbox:not([disabled])');
+            const selectAllCheckbox = document.getElementById('selectAllMetrics');
+            selectAllCheckbox.checked = Array.from(allMetricCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && Array.from(allMetricCheckboxes).some(cb => cb.checked);
+            
+            // Update corresponding filter checkbox in sidebar to match selection
+            const sidebarCheckbox = document.querySelector(`.sidebar-filter-checkbox[value="${checkbox.value}"]`);
+            if (sidebarCheckbox) {
+                sidebarCheckbox.checked = checkbox.checked;
+            }
+            
+            saveSelectedMetrics();
+            updateExportButton();
+        }
+
+        // Save selected metrics to server
+        function saveSelectedMetrics() {
+            fetch('/update_selected_metrics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'metrics[]': Array.from(selectedMetrics)
+                })
+            });
+        }
+
+        // Update export button state and text
+        function updateExportButton() {
+            const exportBtn = document.querySelector('.export-button');
+            exportBtn.textContent = `Export Selected (${selectedMetrics.size})`;
+            exportBtn.disabled = selectedMetrics.size === 0;
+            exportBtn.style.opacity = selectedMetrics.size === 0 ? '0.5' : '1';
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            const category = document.getElementById('categoryFilter').value;
+            const searchTerm = document.getElementById('metricSearch').value.toLowerCase();
+            
+            // Filter metrics in sidebar
+            document.querySelectorAll('.metric-category').forEach(categoryDiv => {
+                const categoryName = categoryDiv.dataset.category;
+                const shouldShowCategory = !category || categoryName === category;
+                categoryDiv.style.display = shouldShowCategory ? '' : 'none';
+                
+                if (shouldShowCategory && searchTerm) {
+                    categoryDiv.querySelectorAll('.metric-list li').forEach(li => {
+                        const text = li.textContent.toLowerCase();
+                        li.style.display = text.includes(searchTerm) ? '' : 'none';
+                    });
+                }
+            });
+            
+            // Get currently visible metrics from sidebar filters
+            const visibleSidebarMetrics = new Set();
+            document.querySelectorAll('.sidebar-filter-checkbox:checked').forEach(cb => {
+                visibleSidebarMetrics.add(cb.value);
+            });
+
+            // Filter table rows
+            const rows = document.querySelectorAll('#resultsTable tbody tr');
+            rows.forEach(row => {
+                const metricName = row.dataset.name;
+                const rowCategory = row.dataset.category;
+                     const matchesCategory = !category || rowCategory === category;
+            const matchesSearch = !searchTerm || metricName.toLowerCase().includes(searchTerm);
+            const isVisible = visibleSidebarMetrics.has(metricName);
+
+            // Check metric type filters
+            const showIP = document.getElementById('filterIP').checked;
+            const showAMB = document.getElementById('filterAMB').checked;
+            const rowType = row.dataset.type;
+            const matchesType = (rowType === 'IP' && showIP) || 
+                              (rowType === 'AMB' && showAMB) || 
+                              (rowType === 'IP/AMB' && (showIP || showAMB));
+                
+                // Handle significant results filter
+                let matchesSignificant = true;
+                if (window.showingSignificantOnly) {
+                    const pctChange = row.dataset.pctChange;
+                    if (pctChange === 'N/A' || pctChange === '0.00%') {
+                        matchesSignificant = false;
+                    } else {
+                        const numericChange = parseFloat(pctChange.replace('%', ''));
+                        matchesSignificant = Math.abs(numericChange) >= 5;
+                    }
+                }
+                
+                const shouldShow = matchesCategory && matchesSearch && isVisible && matchesSignificant && matchesType;
+                row.style.display = shouldShow ? '' : 'none';
+                
+                // Update row's checkbox visibility
+                const checkbox = row.querySelector('.metric-checkbox');
+                if (checkbox) {
+                    checkbox.disabled = !shouldShow;
+                }
+            });
+
+            // Update "Select All" checkbox state after filtering
+            const visibleCheckboxes = document.querySelectorAll('.metric-checkbox:not([disabled]):not([style*="display: none"])');
+            const selectAllCheckbox = document.getElementById('selectAllMetrics');
+            selectAllCheckbox.checked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && Array.from(visibleCheckboxes).some(cb => cb.checked);
+        }
+        
+        // Function to update table filters when sidebar checkboxes change
+        function updateTableFilters(event) {
+            if (event) {
+                // Update category checkbox state
+                const checkbox = event.target;
+                const categoryDiv = checkbox.closest('.metric-category');
+                const categoryCheckbox = categoryDiv.querySelector('.category-filter-checkbox');
+                const metricCheckboxes = categoryDiv.querySelectorAll('.sidebar-filter-checkbox');
+                
+                // Update category checkbox based on metric checkboxes state
+                categoryCheckbox.checked = Array.from(metricCheckboxes).every(cb => cb.checked);
+                categoryCheckbox.indeterminate = !categoryCheckbox.checked && Array.from(metricCheckboxes).some(cb => cb.checked);
+            }
+            
+            applyFilters();
+        }
+        
+        // Filter by category
+        function filterByCategory() {
+            applyFilters();
+        }
+        
+        // Filter by search
+        function filterBySearch() {
+            applyFilters();
+        }
+
+        // Filter by metric type (IP/AMB)
+        function updateMetricTypeFilters() {
+            const showIP = document.getElementById('filterIP').checked;
+            const showAMB = document.getElementById('filterAMB').checked;
+            
+            // Update visibility in table
+            const rows = document.querySelectorAll('#resultsTable tbody tr');
+            rows.forEach(row => {
+                const type = row.dataset.type;
+                const shouldShowType = (type === 'IP' && showIP) || 
+                                    (type === 'AMB' && showAMB) || 
+                                    (type === 'IP/AMB' && (showIP || showAMB));
+                if (!shouldShowType) {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Reapply other filters
+            applyFilters();
+        }
+        
+        // Show only significant results (>5% change)
+        function showSignificantResults() {
+            // Reset all filters first
+            document.getElementById('metricSearch').value = '';
+            document.getElementById('categoryFilter').value = '';
+            
+            // Check all boxes first to ensure we see all significant results
+            document.querySelectorAll('.sidebar-filter-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            document.querySelectorAll('.category-filter-checkbox').forEach(cb => {
+                cb.checked = true;
+                cb.indeterminate = false;
+            });
+            
+            // Set the flag to show significant results
+            window.showingSignificantOnly = true;
+            
+            // Apply the filters to show only significant results
+            applyFilters();
+            
+            // Update button states
+            document.getElementById('showSignificantButton').classList.add('active');
+            document.getElementById('showAllButton').classList.remove('active');
+
+            // Clear any indeterminate states from category checkboxes
+            document.querySelectorAll('.category-filter-checkbox').forEach(cb => {
+                cb.indeterminate = false;
+            });
+        }
+
+        // Show all results
+        function showAllResults() {
+            // Reset the significant results flag first
+            window.showingSignificantOnly = false;
+            
+            // Reset all search and category filters
+            document.getElementById('metricSearch').value = '';
+            document.getElementById('categoryFilter').value = '';
+            
+            // Reset metric type filters
+            document.getElementById('filterIP').checked = true;
+            document.getElementById('filterAMB').checked = true;
+            
+            // Reset all checkboxes to their default state (checked)
+            document.querySelectorAll('.sidebar-filter-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            document.querySelectorAll('.category-filter-checkbox').forEach(cb => {
+                cb.checked = true;
+                cb.indeterminate = false;
+            });
+            
+            // Apply filters (which will now show everything)
+            applyFilters();
+            
+            // Update button states
+            document.getElementById('showAllButton').classList.add('active');
+            document.getElementById('showSignificantButton').classList.remove('active');
+
+            // Force update the "Select All" checkbox state
+            const selectAllCheckbox = document.getElementById('selectAllMetrics');
+            if (selectAllCheckbox) {
+                const visibleCheckboxes = document.querySelectorAll('.metric-checkbox:not([disabled]):not([style*="display: none"])');
+                selectAllCheckbox.checked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+                selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && Array.from(visibleCheckboxes).some(cb => cb.checked);
+            }
+        }
+
+        // Initialize sidebar filters to match selected metrics
+        function initializeSidebarFilters() {
+            const sidebarCheckboxes = document.querySelectorAll('.sidebar-filter-checkbox');
+            sidebarCheckboxes.forEach(checkbox => {
+                checkbox.checked = true; // Start with all metrics visible
+            });
+            applyFilters();
+        }
+
+        // Toggle all metrics in a category
+        function toggleCategoryMetrics(checkbox) {
+            const category = checkbox.value;
+            const categoryDiv = checkbox.closest('.metric-category');
+            const metricCheckboxes = categoryDiv.querySelectorAll('.sidebar-filter-checkbox');
+            
+            metricCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            
+            // Update the filters after toggling
+            applyFilters();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSidebarFilters();
+            updateExportButton();
+            
+            // Initialize category checkboxes state
+            document.querySelectorAll('.category-filter-checkbox').forEach(categoryCheckbox => {
+                const categoryDiv = categoryCheckbox.closest('.metric-category');
+                const metricCheckboxes = categoryDiv.querySelectorAll('.sidebar-filter-checkbox');
+                categoryCheckbox.checked = Array.from(metricCheckboxes).every(cb => cb.checked);
+            });
+
+            // Initialize metric type filters
+            document.getElementById('filterIP').checked = true;
+            document.getElementById('filterAMB').checked = true;
+
+            // Add event listeners for the filter buttons
+            document.getElementById('showSignificantButton').addEventListener('click', showSignificantResults);
+            document.getElementById('showAllButton').addEventListener('click', showAllResults);
+
+            // Initialize the significant results flag
+            window.showingSignificantOnly = false;
+        });
+
+        // Sort table function
+        function sortTable(columnIndex, type) {
+            const table = document.getElementById('resultsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+            const header = table.querySelector(`th:nth-child(${columnIndex + 1}) .sortable`);
+            const isAsc = !header.classList.contains('asc');
+            
+            // Reset all headers
+            table.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+            });
+            
+            // Set new sort direction
+            header.classList.add(isAsc ? 'asc' : 'desc');
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue = a.cells[columnIndex].textContent.trim();
+                let bValue = b.cells[columnIndex].textContent.trim();
+                
+                if (type === 'numeric') {
+                    // Handle special cases like 'N/A' and percentage values
+                    if (aValue === 'N/A') return isAsc ? 1 : -1;
+                    if (bValue === 'N/A') return isAsc ? -1 : 1;
+                    
+                    // Remove percentage signs and handle negative values
+                    aValue = parseFloat(aValue.replace(/[%,]/g, ''));
+                    bValue = parseFloat(bValue.replace(/[%,]/g, ''));
+                    
+                    if (isNaN(aValue)) return isAsc ? 1 : -1;
+                    if (isNaN(bValue)) return isAsc ? -1 : 1;
+                    
+                    return isAsc ? aValue - bValue : bValue - aValue;
+                } else {
+                    // For the Metric Name column, exclude the checkbox from sorting
+                    if (columnIndex === 0) {
+                        aValue = a.cells[columnIndex].querySelector('span').textContent.trim();
+                        bValue = b.cells[columnIndex].querySelector('span').textContent.trim();
+                    }
+                    
+                    // Text comparison using localeCompare for proper string sorting
+                    return isAsc ? 
+                        aValue.localeCompare(bValue, undefined, {numeric: true, sensitivity: 'base'}) : 
+                        bValue.localeCompare(aValue, undefined, {numeric: true, sensitivity: 'base'});
+                }
+            });
+            
+            // Reorder rows in the table
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Update "Select All" checkbox state after sorting
+            const selectAllCheckbox = document.getElementById('selectAllMetrics');
+            const visibleCheckboxes = document.querySelectorAll('.metric-checkbox:not([disabled]):not([style*="display: none"])');
+            selectAllCheckbox.checked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && Array.from(visibleCheckboxes).some(cb => cb.checked);
+        }
+    </script>
+    <!-- Add html2pdf library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        // Export selected metrics to PDF
+        function exportSelectedMetrics() {
+            // Create a new div for the export content
+            const exportContent = document.createElement('div');
+            exportContent.style.padding = '15px';
+            exportContent.style.maxWidth = '800px'; // Narrower width for portrait mode
+            exportContent.style.margin = '0 auto';
+            exportContent.style.fontSize = '10pt';
+            
+            // Add header
+            const header = document.createElement('div');
+            header.style.marginBottom = '20px';
+            header.innerHTML = `
+                <h1 style="color: #007bff; margin-bottom: 20px;">Selected Metrics Analysis</h1>
+                <div style="margin-bottom: 15px;">
+                    <p><strong>Selected Clinicians:</strong> ${document.querySelector('.summary-info').children[0].textContent.split(':')[1].trim()}</p>
+                    <p><strong>Pre-Intervention Period:</strong> ${document.querySelector('.summary-info').children[1].textContent.split(':')[1].trim()}</p>
+                    <p><strong>Post-Intervention Period:</strong> ${document.querySelector('.summary-info').children[2].textContent.split(':')[1].trim()}</p>
+                    <p><strong>Number of Selected Metrics:</strong> ${selectedMetrics.size}</p>
+                </div>
+            `;
+            exportContent.appendChild(header);
+            
+            // Create table for selected metrics
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginTop = '20px';
+            table.style.fontSize = '9pt'; // Smaller font size for better fit
+            
+            // Add table header
+            table.innerHTML = `
+                <thead style="background-color: #007bff; color: white;">
+                    <tr>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6; font-size: 9pt;">Metric Name</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6; font-size: 9pt;">Type</th>
+                        <th style="padding: 8px; text-align: left; border: 1px solid #dee2e6; font-size: 9pt;">Category</th>
+                        <th style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt;">Pre-Median</th>
+                        <th style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt;">Post-Median</th>
+                        <th style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt;">Abs. Diff.</th>
+                        <th style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt;">% Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            // Add selected metrics to table
+            let rowIndex = 0;
+            document.querySelectorAll('#resultsTable tbody tr').forEach(row => {
+                if (selectedMetrics.has(row.dataset.name)) {
+                    const bgColor = rowIndex % 2 === 0 ? '#f8f9fa' : 'white';
+                    const cells = row.querySelectorAll('td');
+                    table.innerHTML += `
+                        <tr style="background-color: ${bgColor};">
+                            <td style="padding: 6px; text-align: left; border: 1px solid #dee2e6; font-size: 9pt;">${cells[0].textContent}</td>
+                            <td style="padding: 6px; text-align: left; border: 1px solid #dee2e6; font-size: 9pt;">${cells[1].textContent}</td>
+                            <td style="padding: 6px; text-align: left; border: 1px solid #dee2e6; font-size: 9pt;">${cells[2].textContent}</td>
+                            <td style="padding: 6px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt;">${cells[3].textContent}</td>
+                            <td style="padding: 6px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt;">${cells[4].textContent}</td>
+                            <td style="padding: 6px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt; ${cells[5].classList.contains('positive-change') ? 'color: #28a745;' : cells[5].classList.contains('negative-change') ? 'color: #dc3545;' : ''}">${cells[5].textContent}</td>
+                            <td style="padding: 6px; text-align: right; border: 1px solid #dee2e6; font-size: 9pt; ${cells[6].classList.contains('positive-change') ? 'color: #28a745;' : cells[6].classList.contains('negative-change') ? 'color: #dc3545;' : ''}">${cells[6].textContent}</td>
+                        </tr>
+                    `;
+                    rowIndex++;
+                }
+            });
+            
+            table.innerHTML += '</tbody>';
+            exportContent.appendChild(table);
+            
+            // Configure PDF options
+            const opt = {
+                margin: [15, 15],
+                filename: 'selected_metrics_analysis.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    scrollY: -window.scrollY, // Ensures we capture the whole document
+                    windowHeight: document.documentElement.scrollHeight
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait',
+                    compress: true
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Avoid breaking content across pages
+            }; // <-- Add this closing brace and semicolon
+            
+            // Generate PDF
+            html2pdf().set(opt).from(exportContent).save();
+        }
+    </script>
+</body>
+</html>
