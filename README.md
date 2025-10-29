@@ -1,3 +1,5 @@
+Disclaimer: This was not written by a software developer.  This means you will likely need to tweak the code for it to run locally for you.
+
 # Easylytics
 Tool for performing before/after intervention analysis with Epic Signal Data.
 
